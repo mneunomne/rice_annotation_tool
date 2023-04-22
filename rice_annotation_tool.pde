@@ -23,7 +23,6 @@ PGraphics label;
 
 void setup() {
 
-
   size(256, 256);
   background(0);
 
@@ -33,25 +32,35 @@ void setup() {
   label.background(0, 0);
   label.endDraw();
   
-  // list all file names in folder and store them in an array
-
+  
   // we'll have a look in the data folder
-  java.io.File folder = new java.io.File(dataPath("rice_images"));
+  java.io.File imageFolder = new java.io.File(dataPath("rice_images"));
+  java.io.File labelFolder = new java.io.File(dataPath("labels"));
 
   // list the files in the data folder
-  String[] filenames = folder.list();
+  String[] filenames = imageFolder.list();
+  String[] labels = labelFolder.list();
 
   // sort array alphabetically
-  sort(filenames);
+  filenames = sort(filenames);
+  labels = sort(labels);
   
   images = filenames;
 
-  println(path + images[currentImage]);
-
   println(images.length + " images found");
   
-  // load the first image
+  // load the first image without label
+  for (int i = 0; i < labels.length; i++) {
+    String img = images[currentImage].replaceFirst("\\.jpg", "");
+    String label = labels[i].replaceFirst("\\_label.png", "");
+   
+    if (img.equals(label) == true) {
+      currentImage ++;
+    }
+  }
+  
   img = loadImage(path + images[currentImage]);
+  println(path + images[currentImage]);
 
 }
 
@@ -66,6 +75,8 @@ void draw() {
       pmouseY = mouseY;
     }
     label.stroke(255);
+    // TODO: add stroke width
+    //label.ellipse(mouseX,mouseY,3,3); 
     label.line(mouseX, mouseY, pmouseX, pmouseY);
     label.endDraw();
     pmouseX = mouseX;
@@ -85,7 +96,6 @@ void draw() {
 
 void setNextImage() {
   if (currentImage < images.length) {
-    saveLabel();
     currentImage++;
     img = loadImage(path + images[currentImage]);
     setCurrentLabel();
@@ -110,6 +120,7 @@ String getFilename(String path) {
 }
 
 void saveLabel () {
+  // TODO: save label shouldn't hide the rice image
   // add black background
   label.loadPixels();
   for (int i = 0; i < label.pixels.length; i++) {
@@ -118,7 +129,7 @@ void saveLabel () {
    }
   }
   label.updatePixels();
-  label.save("data/labels/" + getFilename(images[currentImage]) + "-label.png");
+  label.save("data/labels/" + getFilename(images[currentImage]) + "_label.png");
   // log
   println("saved label for " + images[currentImage]);
 }
@@ -128,7 +139,8 @@ void keyPressed() {
     saveLabel();
   }
   if (key == 'n') {
-    saveLabel();
+    // don't auto save on next
+    // saveLabel();
     setNextImage();
   }
   // clear current label
@@ -149,12 +161,10 @@ void keyPressed() {
 
 // set current label if it exists
 void setCurrentLabel () {
+  // TODO: doesn't seem to display the saved labels correctly now
   String labelPath = dataPath("labels/" + getFilename(images[currentImage]) + "-label.png");
   // try to load file
-
   java.io.File file = new java.io.File(labelPath);
-  println("file", file, "exists", file.exists());
-    println("labelPath! 2", labelPath);
   if (file.exists()) {
     PImage labelImage = loadImage(labelPath);
     labelImage.updatePixels();
