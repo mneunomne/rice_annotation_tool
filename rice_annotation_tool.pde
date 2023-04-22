@@ -111,6 +111,13 @@ String getFilename(String path) {
 
 void saveLabel () {
   // add black background
+  label.loadPixels();
+  for (int i = 0; i < label.pixels.length; i++) {
+   if ( label.pixels[i] == color(0,0) ) {
+     label.pixels[i] = color(0);
+   }
+  }
+  label.updatePixels();
   label.save("data/labels/" + getFilename(images[currentImage]) + "-label.png");
   // log
   println("saved label for " + images[currentImage]);
@@ -149,10 +156,19 @@ void setCurrentLabel () {
   println("file", file, "exists", file.exists());
     println("labelPath! 2", labelPath);
   if (file.exists()) {
+    PImage labelImage = loadImage(labelPath);
+    labelImage.updatePixels();
     label.beginDraw();
-    label.background(0, 0);
-    label.image(loadImage(labelPath), 0, 0);
+    label.image(labelImage, 0, 0);
     label.endDraw();
+    // substitute black pixels to transparent
+    label.loadPixels();
+    for (int i = 0; i < label.pixels.length; i++) {
+     if ( label.pixels[i] == color(0)) {
+       label.pixels[i] = color(0, 0);
+     }
+    }
+    label.updatePixels();
   } else {
     label.beginDraw();
     label.background(0, 0);
