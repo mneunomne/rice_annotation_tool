@@ -21,9 +21,6 @@ PImage img;
 // canvas for the label
 PGraphics label;
 
-// store the lines in label canvas so we can undo ?
-ArrayLisy<Line> lines = new ArrayList<Line>();
-
 void setup() {
 
 
@@ -32,6 +29,9 @@ void setup() {
 
   // setup the label canvas with transparent background
   label = createGraphics(256, 256);
+  label.beginDraw();
+  label.background(0, 0);
+  label.endDraw();
   
   // list all file names in folder and store them in an array
 
@@ -41,6 +41,9 @@ void setup() {
   // list the files in the data folder
   String[] filenames = folder.list();
 
+  // sort array alphabetically
+  sort(filenames);
+  
   images = filenames;
 
   println(path + images[currentImage]);
@@ -80,16 +83,21 @@ void draw() {
 
 
 
-void nextImage() {
+void setNextImage() {
   if (currentImage < images.length) {
+    saveLabel();
     currentImage++;
-    // clear the label canvas
-    label.beginDraw();
-    label.background(0, 0);
-    label.endDraw();
     img = loadImage(path + images[currentImage]);
-  } else {
-    exit();
+    setCurrentLabel();
+  }
+}
+
+void setPreviousImage () {
+  if (currentImage > 0) {
+    saveLabel();
+    currentImage--;
+    img = loadImage(path + images[currentImage]);
+    setCurrentLabel();
   }
 }
 
@@ -103,14 +111,9 @@ String getFilename(String path) {
 
 void saveLabel () {
   // add black background
-  label.loadPixels();
-  for (int i = 0; i < label.pixels.length; i++) {
-    if (label.pixels[i] == color(0, 0, 0, 0)) {
-      label.pixels[i] = color(0);
-    }
-  }
-  label.updatePixels();
   label.save("data/labels/" + getFilename(images[currentImage]) + "-label.png");
+  // log
+  println("saved label for " + images[currentImage]);
 }
 
 void keyPressed() {
@@ -119,6 +122,40 @@ void keyPressed() {
   }
   if (key == 'n') {
     saveLabel();
-    nextImage();
+    setNextImage();
+  }
+  // clear current label
+  if (key == 'c') {
+    label.beginDraw();
+    label.background(0, 0);
+    label.endDraw();
+    saveLabel();
+  }
+  // use arrows to navigate images
+  if (keyCode == LEFT) {
+    setPreviousImage();
+  }
+  if (keyCode == RIGHT) {
+    setNextImage();
+  }
+}
+
+// set current label if it exists
+void setCurrentLabel () {
+  String labelPath = dataPath("labels/" + getFilename(images[currentImage]) + "-label.png");
+  // try to load file
+
+  java.io.File file = new java.io.File(labelPath);
+  println("file", file, "exists", file.exists());
+    println("labelPath! 2", labelPath);
+  if (file.exists()) {
+    label.beginDraw();
+    label.background(0, 0);
+    label.image(loadImage(labelPath), 0, 0);
+    label.endDraw();
+  } else {
+    label.beginDraw();
+    label.background(0, 0);
+    label.endDraw();
   }
 }
