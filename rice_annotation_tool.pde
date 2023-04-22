@@ -9,6 +9,9 @@ once there are no more images in the folder, the application closes
 // image folder path
 String path = "rice_images/";
 
+String labelSuffix = "_label";
+String labelExtension = ".png";
+
 // global vars
 String[] images;
 int currentImage = 0;
@@ -43,7 +46,9 @@ void setup() {
 
   // sort array alphabetically
   filenames = sort(filenames);
-  labels = sort(labels);
+  if (labels.length > 0) {
+    labels = sort(labels);
+  } 
   
   images = filenames;
 
@@ -129,7 +134,7 @@ void saveLabel () {
    }
   }
   label.updatePixels();
-  label.save("data/labels/" + getFilename(images[currentImage]) + "_label.png");
+  label.save("data/labels/" + getFilename(images[currentImage]) + labelSuffix + labelExtension);
   // log
   println("saved label for " + images[currentImage]);
 }
@@ -162,10 +167,11 @@ void keyPressed() {
 // set current label if it exists
 void setCurrentLabel () {
   // TODO: doesn't seem to display the saved labels correctly now
-  String labelPath = dataPath("labels/" + getFilename(images[currentImage]) + "-label.png");
+  String labelPath = dataPath("labels/" + getFilename(images[currentImage]) + labelSuffix + labelExtension);
   // try to load file
   java.io.File file = new java.io.File(labelPath);
   if (file.exists()) {
+    println("loading label for " + images[currentImage]);
     PImage labelImage = loadImage(labelPath);
     labelImage.updatePixels();
     label.beginDraw();
