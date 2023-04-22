@@ -35,7 +35,6 @@ void setup() {
   label.background(0, 0);
   label.endDraw();
   
-  
   // we'll have a look in the data folder
   java.io.File imageFolder = new java.io.File(dataPath("rice_images"));
   java.io.File labelFolder = new java.io.File(dataPath("labels"));
@@ -81,7 +80,7 @@ void draw() {
     }
     label.stroke(255);
     // TODO: add stroke width
-    //label.ellipse(mouseX,mouseY,3,3); 
+    // label.ellipse(mouseX,mouseY,3,3); 
     label.line(mouseX, mouseY, pmouseX, pmouseY);
     label.endDraw();
     pmouseX = mouseX;
@@ -93,27 +92,22 @@ void draw() {
   image(label, 0, 0, width, height);
   // draw the current image number + filename
   fill(255);
-  text(currentImage + " " + images[currentImage], 10, 20);
+  text((currentImage+1) + "  " + images[currentImage], 10, 20);
 
 }
 
-
-
 void setNextImage() {
-  if (currentImage < images.length) {
-    currentImage++;
-    img = loadImage(path + images[currentImage]);
-    setCurrentLabel();
-  }
+  if (currentImage < images.length-1) currentImage++;
+  else currentImage = 0;
+  img = loadImage(path + images[currentImage]);
+  setCurrentLabel();  
 }
 
 void setPreviousImage () {
-  if (currentImage > 0) {
-    saveLabel();
-    currentImage--;
-    img = loadImage(path + images[currentImage]);
-    setCurrentLabel();
-  }
+  if (currentImage > 0) currentImage--;
+  else currentImage = images.length-1;
+  img = loadImage(path + images[currentImage]);
+  setCurrentLabel();
 }
 
 // get filename without extension
@@ -125,18 +119,34 @@ String getFilename(String path) {
 }
 
 void saveLabel () {
-  // TODO: save label shouldn't hide the rice image
-  // add black background
+  
   label.loadPixels();
-  for (int i = 0; i < label.pixels.length; i++) {
-   if ( label.pixels[i] == color(0,0) ) {
+  
+  label_add_black_bg();
+  label.updatePixels();
+  label.save("data/labels/" + getFilename(images[currentImage]) + labelSuffix + labelExtension);
+  
+  label_remove_black_bg();
+  label.updatePixels();
+  
+  // log
+  println("saved label for " + images[currentImage]);
+}
+
+void label_add_black_bg() {
+   for (int i = 0; i < label.pixels.length; i++) {
+     if ( label.pixels[i] == color(0,0) ) {
      label.pixels[i] = color(0);
    }
   }
-  label.updatePixels();
-  label.save("data/labels/" + getFilename(images[currentImage]) + labelSuffix + labelExtension);
-  // log
-  println("saved label for " + images[currentImage]);
+}
+
+void label_remove_black_bg() {
+   for (int i = 0; i < label.pixels.length; i++) {
+     if ( label.pixels[i] == color(0) ) {
+     label.pixels[i] = color(0,0);
+   }
+ }
 }
 
 void keyPressed() {
@@ -153,20 +163,20 @@ void keyPressed() {
     label.beginDraw();
     label.background(0, 0);
     label.endDraw();
-    saveLabel();
+    // clear doesn't automatically clean the saved label
+    // saveLabel();
   }
   // use arrows to navigate images
-  if (keyCode == LEFT) {
+  if (keyCode == LEFT || keyCode == DOWN) {
     setPreviousImage();
   }
-  if (keyCode == RIGHT) {
+  if (keyCode == RIGHT || keyCode == UP) {
     setNextImage();
   }
 }
 
 // set current label if it exists
 void setCurrentLabel () {
-  // TODO: doesn't seem to display the saved labels correctly now
   String labelPath = dataPath("labels/" + getFilename(images[currentImage]) + labelSuffix + labelExtension);
   // try to load file
   java.io.File file = new java.io.File(labelPath);
@@ -179,11 +189,7 @@ void setCurrentLabel () {
     label.endDraw();
     // substitute black pixels to transparent
     label.loadPixels();
-    for (int i = 0; i < label.pixels.length; i++) {
-     if ( label.pixels[i] == color(0)) {
-       label.pixels[i] = color(0, 0);
-     }
-    }
+    label_remove_black_bg();
     label.updatePixels();
   } else {
     label.beginDraw();
